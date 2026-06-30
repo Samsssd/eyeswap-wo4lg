@@ -10,10 +10,12 @@ import {
   Outfit_900Black,
 } from '@expo-google-fonts/outfit';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { ClerkProvider } from '@clerk/expo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -21,14 +23,7 @@ import '../global.css';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { FONT_SEMIBOLD } from '@/constants/fonts';
-
-// The app ships LIGHT-only. The dark-mode code is kept intact (the DarkTheme
-// branch below and the `dark:` utility classes in screens) but stays inert:
-// tailwind.config.js uses `darkMode: 'class'`, so `dark:` utilities only apply
-// when a dark class is manually toggled (we never do), and
-// components/useColorScheme.ts is pinned to 'light' for the navigation theme.
-// To re-enable system dark mode: set darkMode back to 'media' in
-// tailwind.config.js and restore the system value in components/useColorScheme.ts.
+import { tokenCache } from '@/lib/clerk/tokenCache';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -39,8 +34,9 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -52,7 +48,6 @@ export default function RootLayout() {
     Outfit_900Black,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -70,21 +65,44 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-const queryClient = new QueryClient();
-
 function RootLayoutNav() {
-  // Always 'light' (pinned above); kept so the dark branch stays in the code.
+  // Always 'light' (app ships light-only — see tailwind.config.js darkMode).
   const scheme = useColorScheme();
+  const clerkKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-  return (
+  const tree = (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack screenOptions={{ headerTitleStyle: { fontFamily: FONT_SEMIBOLD } }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              headerTitleStyle: { fontFamily: FONT_SEMIBOLD },
+              contentStyle: { backgroundColor: '#F7F6F3' },
+            }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="product" />
+            <Stack.Screen name="conversation" />
+            <Stack.Screen name="merci" />
+            <Stack.Screen name="annule" />
           </Stack>
         </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
+  );
+
+  // Wrap in ClerkProvider when a publishable key is available. If the key is
+  // absent (e.g. during a prerender without env), render without auth so the
+  // export doesn't crash — individual route error boundaries handle the rest.
+  if (!clerkKey) {
+    return tree;
+  }
+
+  return (
+    <ClerkProvider publishableKey={clerkKey} tokenCache={tokenCache}>
+      {tree}
+    </ClerkProvider>
   );
 }

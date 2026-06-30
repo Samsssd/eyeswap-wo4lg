@@ -10,6 +10,11 @@ module.exports = {
   darkMode: "class",
   theme: {
     extend: {
+      colors: {
+        ink: '#101013',
+        paper: '#F7F6F3',
+        coral: '#FF5A3C',
+      },
       fontFamily: {
         // App font: Outfit. The utility NAMES are font-agnostic (font-sans,
         // font-sans-medium, …) so swapping the app font only means changing the
