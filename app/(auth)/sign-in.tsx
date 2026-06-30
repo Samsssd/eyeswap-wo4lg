@@ -30,6 +30,7 @@ export default function SignInScreen() {
 
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [pendingEmail, setPendingEmail] = useState('');
+  const [code, setCode] = useState('');
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -57,7 +58,7 @@ export default function SignInScreen() {
     setLoading(true);
     setServerError(null);
     try {
-      const res = await signIn.attemptFirstFactor({ strategy: 'email_code', code });
+      const res = await signIn.attemptFirstFactor({ strategy: 'email_code', code: code.trim() });
       if (res.status === 'complete') {
         await setActive({ session: res.createdSessionId });
         // The profile row is upserted automatically when the user first visits
@@ -143,21 +144,14 @@ export default function SignInScreen() {
               </>
             ) : (
               <>
-                <Controller
-                  control={codeForm.control}
-                  name="code"
-                  render={({ field: { onChange, value }, fieldState: { error } }) => (
-                    <TextField
-                      label="Code de vérification"
-                      icon="keypad-outline"
-                      placeholder="123456"
-                      value={value ?? ''}
-                      onChangeText={onChange}
-                      error={error?.message}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                    />
-                  )}
+                <TextField
+                  label="Code de vérification"
+                  icon="keypad-outline"
+                  placeholder="123456"
+                  value={code}
+                  onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                  keyboardType="number-pad"
+                  maxLength={6}
                 />
 
                 {serverError ? (
@@ -171,7 +165,13 @@ export default function SignInScreen() {
                   <Button
                     label="Se connecter"
                     loading={loading}
-                    onPress={codeForm.handleSubmit((v) => verifyCode(v.code))}
+                    onPress={() => {
+                      if (code.trim().length < 6) {
+                        setServerError('Saisissez les 6 chiffres du code.');
+                        return;
+                      }
+                      verifyCode(code);
+                    }}
                   />
                   <Button
                     label="Changer d’e-mail"
@@ -180,7 +180,7 @@ export default function SignInScreen() {
                     onPress={() => {
                       setStep('email');
                       setServerError(null);
-                      codeForm.reset();
+                      setCode('');
                     }}
                   />
                 </View>
