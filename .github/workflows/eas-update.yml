@@ -1,0 +1,100 @@
+name: EAS Update (preview)
+
+# Triggered ONLY via the GitHub REST API (workflow_dispatch), e.g.:
+#   curl -X POST \
+#     -H "Authorization: Bearer <PAT-with-workflow-scope>" \
+#     -H "Accept: application/vnd.github+json" \
+#     https://api.github.com/repos/<owner>/<repo>/actions/workflows/eas-update.yml/dispatches \
+#     -d '{"ref":"main"}'
+# The workflow file must exist on the default branch for the API to see it.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish EAS Update
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Node 22: a transitive dep (via @clerk/expo web3 support) requires
+          # engine ">=22"; Node 20 fails `yarn install` at resolution.
+          node-version: 22
+          cache: yarn
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        # Plain `yarn install` (not --frozen-lockfile): this boilerplate is cloned
+        # by users who never touch yarn, so the committed lockfile may drift from
+        # package.json. Resolve/update at install time instead of hard-failing.
+        run: yarn install
+
+      # This boilerplate is renamed per project, so provision the EAS project
+      # under the GitHub repo's name instead of a hardcoded slug.
+      - name: Name the EAS project after the repo
+        run: node ./scripts/eas-set-name.mjs "${{ github.event.repository.name }}"
+
+      # Creates the project under the EXPO_TOKEN account (or links it if a
+      # project with the same slug already exists), writing extra.eas.projectId.
+      - name: Initialize EAS project
+        run: eas init --non-interactive --force
+
+      # Point updates.url at the freshly provisioned project.
+      - name: Wire updates.url to the project
+        run: |
+          node -e '
+            const fs = require("fs");
+            const cfg = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            const id = cfg.expo?.extra?.eas?.projectId;
+            if (!id) { console.error("No projectId found after eas init"); process.exit(1); }
+            cfg.expo.updates = cfg.expo.updates || {};
+            cfg.expo.updates.url = "https://u.expo.dev/" + id;
+            fs.writeFileSync("app.json", JSON.stringify(cfg, null, 2) + "\n");
+            console.log("updates.url -> " + cfg.expo.updates.url);
+          '
+
+      - name: Publish update to the preview branch
+        id: publish
+        # EXPO_PUBLIC_* vars are inlined into the JS bundle at publish time, so
+        # they must be present in this step's environment. Add each as a GitHub
+        # Actions secret (Settings -> Secrets and variables -> Actions). Because
+        # this is the preview workflow, EXPO_PUBLIC_ENV is pinned to "preview".
+        env:
+          EXPO_PUBLIC_ENV: preview
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_APP_ID: ${{ secrets.EXPO_PUBLIC_APP_ID }}
+          EXPO_PUBLIC_MOBILE_API_TOKEN: ${{ secrets.EXPO_PUBLIC_MOBILE_API_TOKEN }}
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+        run: |
+          # Publish with --json so we can capture the new update group id.
+          UPDATE_JSON=$(eas update --branch preview --message "$(git log -1 --pretty=%s)" --json --non-interactive)
+          GROUP_ID=$(printf '%s' "$UPDATE_JSON" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const u=JSON.parse(d);console.log((Array.isArray(u)?u[0]:u).group)})')
+          PROJECT_ID=$(node -e 'console.log(require("./app.json").expo.extra.eas.projectId)')
+          # 1) step outputs (for any downstream workflow steps)
+          echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+          echo "update_group_id=$GROUP_ID" >> "$GITHUB_OUTPUT"
+          # 2) a parseable log line (the deploy script greps this after the run)
+          echo "EAS_DEPLOY_IDS projectId=$PROJECT_ID updateGroupId=$GROUP_ID"
+          # 3) a human-readable run summary with the ready-to-use links
+          {
+            echo "### EAS Update published"
+            echo ""
+            echo "- projectId: \`$PROJECT_ID\`"
+            echo "- updateGroupId: \`$GROUP_ID\`"
+            echo "- Expo Go: \`exp://u.expo.dev/$PROJECT_ID/group/$GROUP_ID\`"
+            echo "- QR: https://qr.expo.dev/eas-update?projectId=$PROJECT_ID&groupId=$GROUP_ID"
+          } >> "$GITHUB_STEP_SUMMARY"
