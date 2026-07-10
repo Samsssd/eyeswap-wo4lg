@@ -13,7 +13,7 @@ module.exports = {
       colors: {
         ink: '#101013',
         paper: '#F7F6F3',
-        coral: '#FF5A3C',
+        coral: '#EF4444',
       },
       fontFamily: {
         // App font: Outfit. The utility NAMES are font-agnostic (font-sans,

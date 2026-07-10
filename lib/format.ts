@@ -34,13 +34,10 @@ export function clockTime(iso: string): string {
 }
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  mariage: 'Mariage',
-  portrait: 'Portrait',
-  evenement: 'Événement',
-  produit: 'Produit',
-  paysage: 'Paysage',
-  immobilier: 'Immobilier',
-  famille: 'Famille',
+  attaquant: 'Attaquant',
+  milieu: 'Milieu',
+  defenseur: 'Défenseur',
+  coach: 'Coach',
 };
 
 export const CATEGORIES = Object.keys(CATEGORY_LABELS);

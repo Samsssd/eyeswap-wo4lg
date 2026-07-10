@@ -11,9 +11,9 @@ interface ButtonProps extends PressableProps {
 }
 
 const variantStyles: Record<Variant, { bg: string; text: string; border?: string }> = {
-  primary: { bg: 'bg-coral', text: 'text-white' },
+  primary: { bg: 'bg-red-500', text: 'text-white' },
   secondary: { bg: 'bg-white', text: 'text-ink', border: 'border border-neutral-200' },
-  ghost: { bg: '', text: 'text-coral' },
+  ghost: { bg: '', text: 'text-red-500' },
 };
 
 export function Button({
@@ -33,7 +33,7 @@ export function Button({
       className={`flex-row items-center justify-center rounded-2xl px-6 py-4 ${fullWidth ? 'w-full' : ''} ${v.bg} ${v.border ?? ''} ${disabled || loading ? 'opacity-50' : 'active:opacity-90'}`}
       {...props}>
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#fff' : '#FF5A3C'} size="small" />
+        <ActivityIndicator color={variant === 'primary' ? '#fff' : '#EF4444'} size="small" />
       ) : (
         <Text className={`font-sans-bold text-base ${v.text}`}>{label}</Text>
       )}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -42,10 +43,47 @@ function CategoryChip({
 function SkeletonCard() {
   return (
     <View className="overflow-hidden rounded-3xl bg-white">
-      <View className="h-52 w-full animate-pulse bg-neutral-200" />
+      <View className="aspect-square w-full animate-pulse bg-neutral-200" />
       <View className="gap-2 p-4">
         <View className="h-4 w-2/3 animate-pulse rounded-full bg-neutral-200" />
-        <View className="h-3 w-1/3 animate-pulse rounded-full bg-neutral-200" />
+      </View>
+    </View>
+  );
+}
+
+const STATIC_DICTATORS = [
+  {
+    name: 'Kylian Mobutu',
+    image: 'https://d2w5g74r7hbhjx.cloudfront.net/random_tests/mobutu.WEBP',
+  },
+  {
+    name: 'Ousmane Pinochet',
+    image: 'https://d2w5g74r7hbhjx.cloudfront.net/random_tests/ousmane_pinochet.jpg',
+  },
+  {
+    name: 'Maréchal Deschamps',
+    image: 'https://d2w5g74r7hbhjx.cloudfront.net/random_tests/deschamps.PNG',
+  },
+  {
+    name: 'Bashar Al-Cherki',
+    image: 'https://d2w5g74r7hbhjx.cloudfront.net/random_tests/cherki.PNG',
+  },
+];
+
+function StaticDictatorCard({ name, image }: { name: string; image: string }) {
+  return (
+    <View className="w-1/2 px-2 mb-4">
+      <View className="overflow-hidden rounded-3xl bg-white">
+        <Image
+          source={{ uri: image }}
+          className="aspect-square w-full"
+          resizeMode="cover"
+        />
+        <View className="p-4">
+          <Text className="font-sans-bold text-base leading-tight text-ink" numberOfLines={1}>
+            {name}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -57,6 +95,7 @@ export default function HomeScreen() {
   const [debounced, setDebounced] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const columns = 2;
 
   // Debounce the search query.
   useEffect(() => {
@@ -87,7 +126,7 @@ export default function HomeScreen() {
   }, [fetchProducts, category, debounced]);
 
   const renderItem = ({ item }: { item: ProductWithPhotographer }) => (
-    <View className="mb-4">
+    <View className="mb-4 px-2">
       <ProductCard product={item} />
     </View>
   );
@@ -100,18 +139,31 @@ export default function HomeScreen() {
         data={products}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF5A3C" />}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#EF4444" />}
+        numColumns={columns}
+        key={columns}
+        columnWrapperStyle={{ marginHorizontal: -2 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View>
+          <View className="px-2">
+            {/* Hero title */}
+            <View className="mb-5 mt-2">
+              <Text className="font-sans-bold text-2xl text-ink">
+                Trouvez votre dictateur
+              </Text>
+              <Text className="mt-1 font-sans text-sm text-neutral-500">
+                Un dictateur sur mesure, partout près de chez vous.
+              </Text>
+            </View>
+
             {/* Search */}
             <View className="mb-4 flex-row items-center gap-3 rounded-2xl bg-white px-4">
               <Ionicons name="search" size={20} color="#9ca3af" />
               <TextInput
                 value={search}
                 onChangeText={setSearch}
-                placeholder="Rechercher un photographe, une prestation…"
+                placeholder="Rechercher un dictateur…"
                 placeholderTextColor="#9ca3af"
                 className="flex-1 py-3.5 font-sans text-base text-ink"
               />
@@ -140,14 +192,24 @@ export default function HomeScreen() {
                 ))}
               </ScrollView>
             </View>
+
+            {/* Static dictator cards */}
+            <View className="flex-row flex-wrap mx-[-8px] mb-6">
+              {STATIC_DICTATORS.map((d) => (
+                <StaticDictatorCard key={d.name} name={d.name} image={d.image} />
+              ))}
+            </View>
           </View>
         }
         ListEmptyComponent={
           loading ? (
-            <View>
-              <SkeletonCard />
-              <View className="mt-4" />
-              <SkeletonCard />
+            <View className="flex-row flex-wrap">
+              {[0, 1, 2, 3].map((i) => (
+                <View key={i} className="w-1/2 px-2">
+                  <SkeletonCard />
+                  <View className="mb-4" />
+                </View>
+              ))}
             </View>
           ) : error ? (
             <View className="items-center py-16">

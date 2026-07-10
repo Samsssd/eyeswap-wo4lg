@@ -45,7 +45,7 @@ export function Header({
               resizeMode="contain"
             />
             <Text className="font-sans-extrabold text-xl tracking-tight text-ink">
-              EyeSwap
+              DictateurSwap
             </Text>
           </View>
         )}
