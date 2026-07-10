@@ -89,6 +89,29 @@ function StaticDictatorCard({ name, image }: { name: string; image: string }) {
   );
 }
 
+function GeneralKylianSection() {
+  return (
+    <View className="mb-6 overflow-hidden rounded-3xl bg-ink">
+      <Image
+        source={{ uri: 'https://d2w5g74r7hbhjx.cloudfront.net/random_tests/mobutu.WEBP' }}
+        className="h-48 w-full"
+        resizeMode="cover"
+      />
+      <View className="p-5">
+        <View className="mb-2 flex-row items-center gap-2">
+          <Text className="font-sans-bold text-xl text-white">
+            Général Kylian
+          </Text>
+          <Text className="text-xl">🫡</Text>
+        </View>
+        <Text className="font-sans text-sm leading-relaxed text-white/80">
+          En hommage à notre leader suprême, commandant en chef des dimensions et gardien du rond-point. Gloire et honneur à ses bottes.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const { products, loading, error, fetchProducts } = useProductsStore();
   const [search, setSearch] = useState('');
@@ -193,12 +216,16 @@ export default function HomeScreen() {
               </ScrollView>
             </View>
 
+            {/* General Kylian */}
+            <GeneralKylianSection />
+
             {/* Static dictator cards */}
             <View className="flex-row flex-wrap mx-[-8px] mb-6">
               {STATIC_DICTATORS.map((d) => (
                 <StaticDictatorCard key={d.name} name={d.name} image={d.image} />
               ))}
             </View>
+
           </View>
         }
         ListEmptyComponent={
