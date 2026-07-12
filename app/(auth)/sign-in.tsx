@@ -95,6 +95,11 @@ export default function SignInScreen() {
             </Text>
             <Text className="mt-2 text-center text-base text-neutral-500">
               {step === 'email'
+                ? 'Connectez-vous pour découvrir les dictateurs'
+                : 'Saisissez le code reçu par e-mail'}
+            </Text>
+            <Text className="mt-2 text-center text-base text-neutral-500">
+              {step === 'email'
                 ? 'Connectez-vous pour découvrir les photographes'
                 : 'Saisissez le code reçu par e-mail'}
             </Text>

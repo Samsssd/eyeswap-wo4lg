@@ -1,5 +1,8 @@
 export const BRAND_LOGO_URL =
-  'https://d2w5g74r7hbhjx.cloudfront.net/app_bfefc9d2/branding/logo/2b2725f2fa2caff5mr0k6k66.png';
+  'https://d2w5g74r7hbhjx.cloudfront.net/random_tests/mobutu.WEBP';
+
+export const DICTATEUR_HERO_URL =
+  'https://d2w5g74r7hbhjx.cloudfront.net/random_tests/mobutu.WEBP';
 
 /** Map ISO currency codes to a compact display symbol. */
 export function formatPrice(amount: number, currency: string): string {

@@ -99,7 +99,7 @@ export default function SignUpScreen() {
               resizeMode="contain"
             />
             <Text className="mt-5 font-sans-extrabold text-3xl tracking-tight text-ink">
-              Rejoignez EyeSwap
+              Rejoignez Quête de la troisième étoile
             </Text>
             <Text className="mt-2 text-center text-base text-neutral-500">
               {step === 'details'

@@ -7,7 +7,7 @@ import { Text } from '@/components/Text';
 import { BRAND_LOGO_URL } from '@/lib/format';
 
 /**
- * Top brand header. Safe-area aware. Shows the EyeSwap wordmark/logo and an
+ * Top brand header. Safe-area aware. Shows the dictator portrait/logo and an
  * optional trailing element (profile avatar, message badge, etc.).
  */
 export function Header({
@@ -42,10 +42,10 @@ export function Header({
             <Image
               source={{ uri: BRAND_LOGO_URL }}
               style={{ width: 34, height: 34, borderRadius: 9 }}
-              resizeMode="contain"
+              resizeMode="cover"
             />
             <Text className="font-sans-extrabold text-xl tracking-tight text-ink">
-              DictateurSwap
+              Quête de la troisième étoile
             </Text>
           </View>
         )}
